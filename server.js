@@ -181,25 +181,34 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password)
+    if (!email || !password) {
       return res.status(400).json({ message: "Email & password required" });
+    }
 
-    const user = await User.findOne({ email, password: md5(password) });
-    if (!user)
+    const user = await User.findOne({ email });
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  
+    // 🔑 Compare hashed password
+    if (user.password !== md5(password)) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    res.json({
+    res.status(200).json({
       message: "Login successful",
-      user: { name: user.name, email: user.email },
+      user: {
+        name: user.name,
+        email: user.email,
+      },
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 app.post("/api/send-otp", async (req, res) => {
   const { name, email, password, faceImage } = req.body;
 
